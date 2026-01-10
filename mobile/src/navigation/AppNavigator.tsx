@@ -12,6 +12,7 @@ import {
   PayrollScreen,
   MoreScreen,
   LeaveScreen,
+  ContractScreen,
 } from '../screens';
 import { colors, fontSize } from '../constants/theme';
 
@@ -41,6 +42,7 @@ const HomeStackNavigator = () => {
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
       <HomeStack.Screen name="HomeMain" component={HomeScreen} />
       <HomeStack.Screen name="Leave" component={LeaveScreen} />
+      <HomeStack.Screen name="Contract" component={ContractScreen} />
     </HomeStack.Navigator>
   );
 };

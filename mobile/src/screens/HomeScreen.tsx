@@ -258,7 +258,7 @@ export const HomeScreen: React.FC = () => {
             <QuickMenuItem icon="📅" label="연차 신청" onPress={() => navigation.navigate('Leave')} />
             <QuickMenuItem icon="💰" label="급여 명세서" />
             <QuickMenuItem icon="📄" label="증명서 발급" />
-            <QuickMenuItem icon="📝" label="전자계약" />
+            <QuickMenuItem icon="📝" label="전자계약" onPress={() => navigation.navigate('Contract')} />
           </View>
         </View>
 

@@ -4,3 +4,4 @@ export { AttendanceScreen } from './AttendanceScreen';
 export { PayrollScreen } from './PayrollScreen';
 export { MoreScreen } from './MoreScreen';
 export { LeaveScreen } from './LeaveScreen';
+export { ContractScreen } from './ContractScreen';
