@@ -9,16 +9,77 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card, WorkHoursGauge } from '../components';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../constants/theme';
+import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
 import { Attendance, WeeklyHours } from '../types';
 
+// 데모 근태 기록 생성
+const generateDemoAttendances = (): Attendance[] => {
+  const attendances: Attendance[] = [];
+  const today = new Date();
+
+  for (let i = 0; i < 14; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+
+    // 주말 제외
+    if (date.getDay() === 0 || date.getDay() === 6) continue;
+
+    const checkIn = new Date(date);
+    checkIn.setHours(8 + Math.floor(Math.random() * 2), Math.floor(Math.random() * 30), 0);
+
+    const checkOut = new Date(date);
+    checkOut.setHours(17 + Math.floor(Math.random() * 3), Math.floor(Math.random() * 60), 0);
+
+    const workMinutes = Math.floor((checkOut.getTime() - checkIn.getTime()) / (1000 * 60));
+
+    let status: Attendance['status'] = 'NORMAL';
+    if (checkIn.getHours() >= 10) status = 'LATE';
+    if (i === 5) status = 'HALF_LEAVE';
+
+    attendances.push({
+      id: `att-${i}`,
+      date: date.toISOString(),
+      checkIn: checkIn.toISOString(),
+      checkOut: checkOut.toISOString(),
+      workMinutes,
+      overtimeMin: Math.max(0, workMinutes - 480),
+      status,
+    });
+  }
+
+  return attendances;
+};
+
+const DEMO_WEEKLY_HOURS: WeeklyHours = {
+  weekStart: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  weekEnd: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+  totalHours: 32.5,
+  remainingHours: 19.5,
+  isOverLimit: false,
+  dailyRecords: [],
+};
+
 export const AttendanceScreen: React.FC = () => {
+  const { token, user } = useAuthStore();
+  const isDemo = token === 'demo-token-12345' || user?.id === 'demo-user-001';
+
   const [refreshing, setRefreshing] = useState(false);
   const [weeklyHours, setWeeklyHours] = useState<WeeklyHours | null>(null);
   const [attendances, setAttendances] = useState<Attendance[]>([]);
 
+  // 데모 모드 초기화
+  useEffect(() => {
+    if (isDemo) {
+      setWeeklyHours(DEMO_WEEKLY_HOURS);
+      setAttendances(generateDemoAttendances());
+    }
+  }, [isDemo]);
+
   const fetchData = useCallback(async () => {
+    if (isDemo) return;
+
     try {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -39,7 +100,7 @@ export const AttendanceScreen: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch attendance:', error);
     }
-  }, []);
+  }, [isDemo]);
 
   useEffect(() => {
     fetchData();

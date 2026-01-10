@@ -10,16 +10,80 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '../components';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../constants/theme';
+import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
 import { Payroll } from '../types';
+import { ScrollView } from 'react-native';
+
+// 데모 급여 데이터 생성
+const generateDemoPayrolls = (): Payroll[] => {
+  const payrolls: Payroll[] = [];
+  const now = new Date();
+
+  for (let i = 0; i < 6; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const baseSalary = 3500000;
+    const overtimePay = Math.floor(Math.random() * 300000) + 100000;
+    const bonus = i === 0 ? 0 : (i % 3 === 0 ? 500000 : 0);
+    const totalAllowance = overtimePay;
+    const grossPay = baseSalary + totalAllowance + bonus;
+
+    // 4대보험 계산
+    const nationalPension = Math.floor(grossPay * 0.045);
+    const healthInsurance = Math.floor(grossPay * 0.03545);
+    const longTermCare = Math.floor(healthInsurance * 0.1295);
+    const employmentIns = Math.floor(grossPay * 0.009);
+    const incomeTax = Math.floor(grossPay * 0.03);
+    const localIncomeTax = Math.floor(incomeTax * 0.1);
+    const totalDeduction = nationalPension + healthInsurance + longTermCare + employmentIns + incomeTax + localIncomeTax;
+    const netPay = grossPay - totalDeduction;
+
+    payrolls.push({
+      id: `pay-${i}`,
+      year: date.getFullYear(),
+      month: date.getMonth() + 1,
+      baseSalary,
+      overtimePay,
+      bonus,
+      totalAllowance,
+      nationalPension,
+      healthInsurance,
+      longTermCare,
+      employmentIns,
+      incomeTax,
+      localIncomeTax,
+      totalDeduction,
+      netPay,
+      paidAt: new Date(date.getFullYear(), date.getMonth() + 1, 10).toISOString(),
+    });
+  }
+
+  return payrolls;
+};
+
+const DEMO_PAYROLLS = generateDemoPayrolls();
 
 export const PayrollScreen: React.FC = () => {
+  const { token, user } = useAuthStore();
+  const isDemo = token === 'demo-token-12345' || user?.id === 'demo-user-001';
+
   const [refreshing, setRefreshing] = useState(false);
   const [payrolls, setPayrolls] = useState<Payroll[]>([]);
   const [selectedPayroll, setSelectedPayroll] = useState<Payroll | null>(null);
 
+  // 데모 모드 초기화
+  useEffect(() => {
+    if (isDemo) {
+      const demoData = generateDemoPayrolls();
+      setPayrolls(demoData);
+      setSelectedPayroll(demoData[0]);
+    }
+  }, [isDemo]);
+
   const fetchData = useCallback(async () => {
+    if (isDemo) return;
+
     try {
       const response = await api.get(API_ENDPOINTS.MY_PAYROLLS);
       setPayrolls(response.data);
@@ -29,7 +93,7 @@ export const PayrollScreen: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch payrolls:', error);
     }
-  }, [selectedPayroll]);
+  }, [isDemo, selectedPayroll]);
 
   useEffect(() => {
     fetchData();

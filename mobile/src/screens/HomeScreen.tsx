@@ -17,9 +17,41 @@ import api from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
 import { Attendance, WeeklyHours, Workplace } from '../types';
 
+// 데모 데이터
+const DEMO_ATTENDANCE: Attendance = {
+  id: 'att-001',
+  date: new Date().toISOString(),
+  checkIn: new Date(new Date().setHours(9, 2, 0)).toISOString(),
+  checkOut: undefined,
+  workMinutes: 0,
+  overtimeMin: 0,
+  status: 'NORMAL',
+};
+
+const DEMO_WEEKLY_HOURS: WeeklyHours = {
+  weekStart: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  weekEnd: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+  totalHours: 32.5,
+  remainingHours: 19.5,
+  isOverLimit: false,
+  dailyRecords: [],
+};
+
+const DEMO_WORKPLACES: Workplace[] = [
+  {
+    id: 'wp-001',
+    name: '본사',
+    latitude: 37.5665,
+    longitude: 126.978,
+    radius: 100,
+  },
+];
+
 export const HomeScreen: React.FC = () => {
   const user = useAuthStore((state) => state.user);
-  const [loading, setLoading] = useState(false);
+  const token = useAuthStore((state) => state.token);
+  const isDemo = token === 'demo-token-12345' || user?.id === 'demo-user-001';
+
   const [refreshing, setRefreshing] = useState(false);
   const [checkInLoading, setCheckInLoading] = useState(false);
   const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(null);
@@ -27,7 +59,20 @@ export const HomeScreen: React.FC = () => {
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [currentTime, setCurrentTime] = useState('');
 
+  // 데모 모드 초기화
+  useEffect(() => {
+    if (isDemo) {
+      setTodayAttendance(DEMO_ATTENDANCE);
+      setWeeklyHours(DEMO_WEEKLY_HOURS);
+      setWorkplaces(DEMO_WORKPLACES);
+    }
+  }, [isDemo]);
+
   const fetchData = useCallback(async () => {
+    if (isDemo) {
+      // 데모 모드에서는 API 호출 안함
+      return;
+    }
     try {
       const [attendanceRes, weeklyRes, workplacesRes] = await Promise.all([
         api.get(API_ENDPOINTS.ATTENDANCE_TODAY),
@@ -41,7 +86,7 @@ export const HomeScreen: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch data:', error);
     }
-  }, []);
+  }, [isDemo]);
 
   useEffect(() => {
     fetchData();
@@ -64,16 +109,45 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handleCheckInOut = async () => {
-    const isCheckingIn = !todayAttendance?.checkIn;
+    const isCheckingIn = !todayAttendance?.checkIn || !!todayAttendance?.checkOut;
+
+    setCheckInLoading(true);
+
+    // 데모 모드
+    if (isDemo) {
+      setTimeout(() => {
+        if (isCheckingIn) {
+          const now = new Date();
+          setTodayAttendance({
+            ...DEMO_ATTENDANCE,
+            checkIn: now.toISOString(),
+            checkOut: undefined,
+          });
+          Alert.alert('출근 완료', `${now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}에 출근했습니다.`);
+        } else {
+          const now = new Date();
+          const checkInTime = new Date(todayAttendance!.checkIn!);
+          const workMinutes = Math.floor((now.getTime() - checkInTime.getTime()) / (1000 * 60));
+          setTodayAttendance({
+            ...todayAttendance!,
+            checkOut: now.toISOString(),
+            workMinutes,
+          });
+          Alert.alert('퇴근 완료', `오늘 근무시간: ${Math.floor(workMinutes / 60)}시간 ${workMinutes % 60}분`);
+        }
+        setCheckInLoading(false);
+      }, 500);
+      return;
+    }
 
     // Request location permission
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('위치 권한 필요', '출퇴근 체크를 위해 위치 권한이 필요합니다.');
+      setCheckInLoading(false);
       return;
     }
 
-    setCheckInLoading(true);
     try {
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
@@ -82,15 +156,13 @@ export const HomeScreen: React.FC = () => {
       const { latitude, longitude } = location.coords;
 
       if (isCheckingIn) {
-        // Check-in: need to select workplace
         if (workplaces.length === 0) {
           Alert.alert('오류', '등록된 근무지가 없습니다. 관리자에게 문의하세요.');
+          setCheckInLoading(false);
           return;
         }
 
-        // For simplicity, use first workplace. In production, show picker
         const workplace = workplaces[0];
-
         const response = await api.post(API_ENDPOINTS.CHECK_IN, {
           latitude,
           longitude,
@@ -99,17 +171,13 @@ export const HomeScreen: React.FC = () => {
 
         Alert.alert('출근 완료', response.data.message);
       } else {
-        // Check-out
         const response = await api.post(API_ENDPOINTS.CHECK_OUT, {
           latitude,
           longitude,
         });
 
         const { workHours, workMinutesRemainder } = response.data;
-        Alert.alert(
-          '퇴근 완료',
-          `오늘 근무시간: ${workHours}시간 ${workMinutesRemainder}분`
-        );
+        Alert.alert('퇴근 완료', `오늘 근무시간: ${workHours}시간 ${workMinutesRemainder}분`);
       }
 
       await fetchData();
