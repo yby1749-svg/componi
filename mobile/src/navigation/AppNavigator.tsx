@@ -11,11 +11,13 @@ import {
   AttendanceScreen,
   PayrollScreen,
   MoreScreen,
+  LeaveScreen,
 } from '../screens';
 import { colors, fontSize } from '../constants/theme';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+const HomeStack = createNativeStackNavigator();
 
 const TabIcon: React.FC<{ label: string; focused: boolean }> = ({ label, focused }) => {
   const icons: Record<string, string> = {
@@ -34,6 +36,15 @@ const TabIcon: React.FC<{ label: string; focused: boolean }> = ({ label, focused
   );
 };
 
+const HomeStackNavigator = () => {
+  return (
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+      <HomeStack.Screen name="Leave" component={LeaveScreen} />
+    </HomeStack.Navigator>
+  );
+};
+
 const MainTabs = () => {
   return (
     <Tab.Navigator
@@ -48,7 +59,7 @@ const MainTabs = () => {
         tabBarLabelStyle: styles.tabLabel,
       })}
     >
-      <Tab.Screen name="홈" component={HomeScreen} />
+      <Tab.Screen name="홈" component={HomeStackNavigator} />
       <Tab.Screen name="근태" component={AttendanceScreen} />
       <Tab.Screen name="급여" component={PayrollScreen} />
       <Tab.Screen name="더보기" component={MoreScreen} />

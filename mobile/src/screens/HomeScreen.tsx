@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { Card, CheckInButton, WorkHoursGauge } from '../components';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../constants/theme';
@@ -48,6 +49,7 @@ const DEMO_WORKPLACES: Workplace[] = [
 ];
 
 export const HomeScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const isDemo = token === 'demo-token-12345' || user?.id === 'demo-user-001';
@@ -253,7 +255,7 @@ export const HomeScreen: React.FC = () => {
         <View style={styles.quickMenuContainer}>
           <Text style={styles.sectionTitle}>빠른 메뉴</Text>
           <View style={styles.quickMenu}>
-            <QuickMenuItem icon="📅" label="연차 신청" />
+            <QuickMenuItem icon="📅" label="연차 신청" onPress={() => navigation.navigate('Leave')} />
             <QuickMenuItem icon="💰" label="급여 명세서" />
             <QuickMenuItem icon="📄" label="증명서 발급" />
             <QuickMenuItem icon="📝" label="전자계약" />
@@ -287,8 +289,8 @@ export const HomeScreen: React.FC = () => {
   );
 };
 
-const QuickMenuItem: React.FC<{ icon: string; label: string }> = ({ icon, label }) => (
-  <TouchableOpacity style={styles.quickMenuItem}>
+const QuickMenuItem: React.FC<{ icon: string; label: string; onPress?: () => void }> = ({ icon, label, onPress }) => (
+  <TouchableOpacity style={styles.quickMenuItem} onPress={onPress}>
     <View style={styles.quickMenuIcon}>
       <Text style={styles.quickMenuEmoji}>{icon}</Text>
     </View>
