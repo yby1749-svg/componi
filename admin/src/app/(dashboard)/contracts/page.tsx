@@ -33,26 +33,26 @@ export default function ContractsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">계약 관리</h1>
-          <p className="text-gray-500">{pendingCount}건의 서명 대기 중</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">계약 관리</h1>
+          <p className="text-gray-500 dark:text-gray-400">{pendingCount}건의 서명 대기 중</p>
         </div>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors">
           + 계약서 발송
         </button>
       </div>
 
       {/* Status Tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {['전체', '서명대기', '서명완료'].map((status) => (
           <button
             key={status}
             onClick={() => setSelectedStatus(status)}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               selectedStatus === status
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
             {status}
@@ -61,58 +61,60 @@ export default function ContractsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">직원</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">계약서 종류</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">제목</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">발송일</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">서명일</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">상태</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">관리</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredContracts.map((contract) => (
-              <tr key={contract.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-600">
-                        {contract.user.charAt(0)}
-                      </span>
-                    </div>
-                    <span className="font-medium text-gray-900">{contract.user}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded">
-                    {typeLabels[contract.type]}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-gray-900">{contract.title}</td>
-                <td className="px-6 py-4 text-gray-500">{contract.sentAt}</td>
-                <td className="px-6 py-4 text-gray-500">{contract.signedAt || '-'}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    contract.status === 'SIGNED'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                    {contract.status === 'SIGNED' ? '서명완료' : '대기'}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                    보기
-                  </button>
-                </td>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+              <tr>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">직원</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">계약서 종류</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">제목</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">발송일</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">서명일</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">상태</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">관리</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              {filteredContracts.map((contract) => (
+                <tr key={contract.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                          {contract.user.charAt(0)}
+                        </span>
+                      </div>
+                      <span className="font-medium text-gray-900 dark:text-white">{contract.user}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded">
+                      {typeLabels[contract.type]}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-gray-900 dark:text-white">{contract.title}</td>
+                  <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{contract.sentAt}</td>
+                  <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{contract.signedAt || '-'}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      contract.status === 'SIGNED'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    }`}>
+                      {contract.status === 'SIGNED' ? '서명완료' : '대기'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium">
+                      보기
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

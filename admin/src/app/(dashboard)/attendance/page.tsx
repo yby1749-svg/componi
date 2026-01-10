@@ -14,12 +14,12 @@ const demoAttendance = [
   { id: 8, user: '임재현', department: '마케팅팀', checkIn: null, checkOut: null, workHours: '-', status: 'ABSENT' },
 ];
 
-const statusLabels: Record<string, { label: string; style: string }> = {
-  NORMAL: { label: '정상', style: 'bg-green-100 text-green-700' },
-  LATE: { label: '지각', style: 'bg-yellow-100 text-yellow-700' },
-  LEAVE: { label: '휴가', style: 'bg-blue-100 text-blue-700' },
-  WORKING: { label: '근무중', style: 'bg-purple-100 text-purple-700' },
-  ABSENT: { label: '결근', style: 'bg-red-100 text-red-700' },
+const statusLabels: Record<string, { label: string; style: string; darkStyle: string }> = {
+  NORMAL: { label: '정상', style: 'bg-green-100 text-green-700', darkStyle: 'dark:bg-green-900/30 dark:text-green-400' },
+  LATE: { label: '지각', style: 'bg-yellow-100 text-yellow-700', darkStyle: 'dark:bg-yellow-900/30 dark:text-yellow-400' },
+  LEAVE: { label: '휴가', style: 'bg-blue-100 text-blue-700', darkStyle: 'dark:bg-blue-900/30 dark:text-blue-400' },
+  WORKING: { label: '근무중', style: 'bg-purple-100 text-purple-700', darkStyle: 'dark:bg-purple-900/30 dark:text-purple-400' },
+  ABSENT: { label: '결근', style: 'bg-red-100 text-red-700', darkStyle: 'dark:bg-red-900/30 dark:text-red-400' },
 };
 
 export default function AttendancePage() {
@@ -36,82 +36,84 @@ export default function AttendancePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">근태 관리</h1>
-          <p className="text-gray-500">일별 출퇴근 현황</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">근태 관리</h1>
+          <p className="text-gray-500 dark:text-gray-400">일별 출퇴근 현황</p>
         </div>
         <input
           type="date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
         />
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-5 gap-4">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-          <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-          <p className="text-sm text-gray-500">전체</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">전체</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-          <p className="text-2xl font-bold text-green-600">{stats.present}</p>
-          <p className="text-sm text-gray-500">출근</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.present}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">출근</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-          <p className="text-2xl font-bold text-yellow-600">{stats.late}</p>
-          <p className="text-sm text-gray-500">지각</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.late}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">지각</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-          <p className="text-2xl font-bold text-blue-600">{stats.leave}</p>
-          <p className="text-sm text-gray-500">휴가</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.leave}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">휴가</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
-          <p className="text-2xl font-bold text-red-600">{stats.absent}</p>
-          <p className="text-sm text-gray-500">결근</p>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.absent}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">결근</p>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">직원</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">부서</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">출근</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">퇴근</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">근무시간</th>
-              <th className="text-left px-6 py-4 text-sm font-medium text-gray-500">상태</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {demoAttendance.map((record) => (
-              <tr key={record.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-600">
-                        {record.user.charAt(0)}
-                      </span>
-                    </div>
-                    <span className="font-medium text-gray-900">{record.user}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-gray-500">{record.department}</td>
-                <td className="px-6 py-4 text-gray-900">{record.checkIn || '-'}</td>
-                <td className="px-6 py-4 text-gray-900">{record.checkOut || '-'}</td>
-                <td className="px-6 py-4 text-gray-900">{record.workHours}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 text-xs rounded-full ${statusLabels[record.status].style}`}>
-                    {statusLabels[record.status].label}
-                  </span>
-                </td>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+              <tr>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">직원</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">부서</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">출근</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">퇴근</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">근무시간</th>
+                <th className="text-left px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">상태</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              {demoAttendance.map((record) => (
+                <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                          {record.user.charAt(0)}
+                        </span>
+                      </div>
+                      <span className="font-medium text-gray-900 dark:text-white">{record.user}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{record.department}</td>
+                  <td className="px-6 py-4 text-gray-900 dark:text-white">{record.checkIn || '-'}</td>
+                  <td className="px-6 py-4 text-gray-900 dark:text-white">{record.checkOut || '-'}</td>
+                  <td className="px-6 py-4 text-gray-900 dark:text-white">{record.workHours}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 text-xs rounded-full ${statusLabels[record.status].style} ${statusLabels[record.status].darkStyle}`}>
+                      {statusLabels[record.status].label}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

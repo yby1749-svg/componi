@@ -49,11 +49,11 @@ export default function LeavePage() {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'APPROVED':
-        return 'bg-green-100 text-green-700';
+        return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case 'REJECTED':
-        return 'bg-red-100 text-red-700';
+        return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       default:
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
     }
   };
 
@@ -74,20 +74,20 @@ export default function LeavePage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">휴가 승인</h1>
-        <p className="text-gray-500">{pendingCount}건의 승인 대기 중</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">휴가 승인</h1>
+        <p className="text-gray-500 dark:text-gray-400">{pendingCount}건의 승인 대기 중</p>
       </div>
 
       {/* Status Tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {statusFilters.map((status) => (
           <button
             key={status}
             onClick={() => setSelectedStatus(status)}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               selectedStatus === status
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
             {status}
@@ -105,34 +105,34 @@ export default function LeavePage() {
         {filteredRequests.map((request) => (
           <div
             key={request.id}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700"
           >
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
               <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-lg font-medium text-blue-600">
+                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+                  <span className="text-lg font-medium text-blue-600 dark:text-blue-400">
                     {request.user.charAt(0)}
                   </span>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900">{request.user}</h3>
-                    <span className="text-sm text-gray-500">{request.department}</span>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{request.user}</h3>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{request.department}</span>
                   </div>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">
+                  <div className="flex flex-wrap items-center gap-3 mt-1">
+                    <span className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">
                       {typeLabels[request.type]}
                     </span>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
                       {request.startDate} {request.startDate !== request.endDate && `~ ${request.endDate}`}
                     </span>
-                    <span className="text-sm text-gray-500">({request.days}일)</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">({request.days}일)</span>
                   </div>
-                  <p className="text-sm text-gray-600 mt-2">사유: {request.reason}</p>
-                  <p className="text-xs text-gray-400 mt-1">신청일: {request.createdAt}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">사유: {request.reason}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">신청일: {request.createdAt}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
                 <span className={`px-3 py-1 text-sm rounded-full ${getStatusStyle(request.status)}`}>
                   {getStatusLabel(request.status)}
                 </span>
@@ -140,13 +140,13 @@ export default function LeavePage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleApprove(request.id)}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       승인
                     </button>
                     <button
                       onClick={() => handleReject(request.id)}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                     >
                       반려
                     </button>
@@ -158,7 +158,7 @@ export default function LeavePage() {
         ))}
 
         {filteredRequests.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
             해당하는 휴가 신청이 없습니다.
           </div>
         )}
