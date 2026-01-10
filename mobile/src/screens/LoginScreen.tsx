@@ -17,6 +17,35 @@ import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
 
+// 데모 계정 정보
+const DEMO_USER = {
+  id: 'demo-user-001',
+  email: 'demo@componi.app',
+  name: '김컴포니',
+  phone: '010-1234-5678',
+  employeeNo: 'EMP001',
+  role: 'EMPLOYEE' as const,
+  status: 'ACTIVE' as const,
+  annualLeave: 15,
+  usedLeave: 3,
+  hireDate: '2024-01-15',
+  company: {
+    id: 'company-001',
+    name: '컴포니 주식회사',
+    bizNumber: '123-45-67890',
+    address: '서울시 강남구 테헤란로 123',
+  },
+  department: {
+    id: 'dept-001',
+    name: '개발팀',
+  },
+  position: {
+    id: 'pos-001',
+    name: '선임',
+    level: 3,
+  },
+};
+
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,6 +59,14 @@ export const LoginScreen: React.FC = () => {
     }
 
     setLoading(true);
+
+    // 데모 로그인 체크
+    if (email === 'demo@componi.app' && password === '1234') {
+      await setAuth(DEMO_USER, 'demo-token-12345');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await api.post(API_ENDPOINTS.LOGIN, { email, password });
       const { user, token } = response.data;
@@ -50,9 +87,11 @@ export const LoginScreen: React.FC = () => {
       >
         <View style={styles.content}>
           <View style={styles.logoContainer}>
-            <View style={styles.logoPlaceholder}>
-              <Text style={styles.logoText}>C</Text>
-            </View>
+            <Image
+              source={require('../../assets/icon.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={styles.appName}>Componi</Text>
             <Text style={styles.tagline}>간편한 인사관리의 시작</Text>
           </View>
@@ -96,6 +135,12 @@ export const LoginScreen: React.FC = () => {
             <TouchableOpacity style={styles.forgotPassword}>
               <Text style={styles.forgotPasswordText}>비밀번호를 잊으셨나요?</Text>
             </TouchableOpacity>
+
+            <View style={styles.demoContainer}>
+              <Text style={styles.demoTitle}>테스트 계정</Text>
+              <Text style={styles.demoText}>ID: demo@componi.app</Text>
+              <Text style={styles.demoText}>PW: 1234</Text>
+            </View>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -120,19 +165,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xxl,
   },
-  logoPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 24,
     marginBottom: spacing.md,
-  },
-  logoText: {
-    fontSize: 40,
-    fontWeight: fontWeight.bold,
-    color: colors.textWhite,
   },
   appName: {
     fontSize: fontSize.xxxl,
@@ -175,5 +212,23 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     fontSize: fontSize.md,
     color: colors.primary,
+  },
+  demoContainer: {
+    marginTop: spacing.xl,
+    padding: spacing.md,
+    backgroundColor: colors.surfaceSecondary,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+  },
+  demoTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  demoText: {
+    fontSize: fontSize.sm,
+    color: colors.textTertiary,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
 });
