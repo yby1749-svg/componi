@@ -13,6 +13,7 @@ import {
   MoreScreen,
   LeaveScreen,
   ContractScreen,
+  CertificateScreen,
 } from '../screens';
 import { colors, fontSize } from '../constants/theme';
 
@@ -43,6 +44,7 @@ const HomeStackNavigator = () => {
       <HomeStack.Screen name="HomeMain" component={HomeScreen} />
       <HomeStack.Screen name="Leave" component={LeaveScreen} />
       <HomeStack.Screen name="Contract" component={ContractScreen} />
+      <HomeStack.Screen name="Certificate" component={CertificateScreen} />
     </HomeStack.Navigator>
   );
 };
