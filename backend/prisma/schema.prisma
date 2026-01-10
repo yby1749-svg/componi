@@ -1,0 +1,309 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 회사 정보
+model Company {
+  id          String   @id @default(uuid())
+  name        String
+  bizNumber   String   @unique @map("biz_number")
+  address     String?
+  phone       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  departments Department[]
+  positions   Position[]
+  users       User[]
+  workplaces  Workplace[]
+  contracts   Contract[]
+  payrolls    Payroll[]
+
+  @@map("companies")
+}
+
+// 부서
+model Department {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  name      String
+  parentId  String?  @map("parent_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  company Company     @relation(fields: [companyId], references: [id])
+  parent  Department? @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children Department[] @relation("DepartmentHierarchy")
+  users   User[]
+
+  @@map("departments")
+}
+
+// 직급
+model Position {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  name      String
+  level     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+  users   User[]
+
+  @@map("positions")
+}
+
+// 근무지 (GPS/Wi-Fi 기반 출퇴근 체크용)
+model Workplace {
+  id           String   @id @default(uuid())
+  companyId    String   @map("company_id")
+  name         String
+  latitude     Float
+  longitude    Float
+  radius       Int      @default(100) // 미터 단위
+  wifiSsid     String?  @map("wifi_ssid")
+  wifiBssid    String?  @map("wifi_bssid")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  company     Company      @relation(fields: [companyId], references: [id])
+  attendances Attendance[]
+
+  @@map("workplaces")
+}
+
+// 사용자
+model User {
+  id            String    @id @default(uuid())
+  companyId     String    @map("company_id")
+  departmentId  String?   @map("department_id")
+  positionId    String?   @map("position_id")
+  email         String    @unique
+  password      String
+  name          String
+  phone         String?
+  employeeNo    String?   @map("employee_no")
+  role          Role      @default(EMPLOYEE)
+  hireDate      DateTime? @map("hire_date")
+  resignDate    DateTime? @map("resign_date")
+  status        UserStatus @default(ACTIVE)
+  annualLeave   Float     @default(0) @map("annual_leave")
+  usedLeave     Float     @default(0) @map("used_leave")
+  baseSalary    Int       @default(0) @map("base_salary")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  company       Company      @relation(fields: [companyId], references: [id])
+  department    Department?  @relation(fields: [departmentId], references: [id])
+  position      Position?    @relation(fields: [positionId], references: [id])
+  attendances   Attendance[]
+  leaveRequests LeaveRequest[]
+  contracts     Contract[]
+  payrolls      Payroll[]
+  certificates  Certificate[]
+  signatures    Signature[]
+
+  @@map("users")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  RESIGNED
+}
+
+// 근태 기록
+model Attendance {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  workplaceId  String?  @map("workplace_id")
+  date         DateTime @db.Date
+  checkIn      DateTime? @map("check_in")
+  checkOut     DateTime? @map("check_out")
+  checkInLat   Float?   @map("check_in_lat")
+  checkInLng   Float?   @map("check_in_lng")
+  checkOutLat  Float?   @map("check_out_lat")
+  checkOutLng  Float?   @map("check_out_lng")
+  workMinutes  Int?     @map("work_minutes")
+  overtimeMin  Int?     @map("overtime_min")
+  status       AttendanceStatus @default(NORMAL)
+  note         String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user      User       @relation(fields: [userId], references: [id])
+  workplace Workplace? @relation(fields: [workplaceId], references: [id])
+
+  @@unique([userId, date])
+  @@map("attendances")
+}
+
+enum AttendanceStatus {
+  NORMAL
+  LATE
+  EARLY_LEAVE
+  ABSENT
+  LEAVE
+  HALF_LEAVE
+}
+
+// 휴가 신청
+model LeaveRequest {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  type        LeaveType
+  startDate   DateTime @map("start_date") @db.Date
+  endDate     DateTime @map("end_date") @db.Date
+  days        Float
+  reason      String?
+  status      ApprovalStatus @default(PENDING)
+  approverId  String?  @map("approver_id")
+  approvedAt  DateTime? @map("approved_at")
+  rejectReason String? @map("reject_reason")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("leave_requests")
+}
+
+enum LeaveType {
+  ANNUAL
+  HALF_AM
+  HALF_PM
+  SICK
+  SPECIAL
+  UNPAID
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+// 계약서
+model Contract {
+  id           String   @id @default(uuid())
+  companyId    String   @map("company_id")
+  userId       String   @map("user_id")
+  type         ContractType
+  title        String
+  content      String   @db.Text
+  filePath     String?  @map("file_path")
+  status       ContractStatus @default(PENDING)
+  sentAt       DateTime? @map("sent_at")
+  signedAt     DateTime? @map("signed_at")
+  expiresAt    DateTime? @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  company    Company     @relation(fields: [companyId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
+  signatures Signature[]
+
+  @@map("contracts")
+}
+
+enum ContractType {
+  EMPLOYMENT
+  NDA
+  CONFIDENTIALITY
+  OTHER
+}
+
+enum ContractStatus {
+  DRAFT
+  PENDING
+  SIGNED
+  EXPIRED
+  CANCELLED
+}
+
+// 전자서명
+model Signature {
+  id          String   @id @default(uuid())
+  contractId  String   @map("contract_id")
+  userId      String   @map("user_id")
+  imagePath   String   @map("image_path")
+  imageHash   String   @map("image_hash")
+  ipAddress   String?  @map("ip_address")
+  deviceInfo  String?  @map("device_info")
+  signedAt    DateTime @default(now()) @map("signed_at")
+
+  contract Contract @relation(fields: [contractId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@map("signatures")
+}
+
+// 급여
+model Payroll {
+  id              String   @id @default(uuid())
+  companyId       String   @map("company_id")
+  userId          String   @map("user_id")
+  year            Int
+  month           Int
+  baseSalary      Int      @map("base_salary")
+  overtimePay     Int      @default(0) @map("overtime_pay")
+  bonus           Int      @default(0)
+  totalAllowance  Int      @default(0) @map("total_allowance")
+  nationalPension Int      @default(0) @map("national_pension")
+  healthInsurance Int      @default(0) @map("health_insurance")
+  longTermCare    Int      @default(0) @map("long_term_care")
+  employmentIns   Int      @default(0) @map("employment_ins")
+  incomeTax       Int      @default(0) @map("income_tax")
+  localIncomeTax  Int      @default(0) @map("local_income_tax")
+  totalDeduction  Int      @default(0) @map("total_deduction")
+  netPay          Int      @default(0) @map("net_pay")
+  paidAt          DateTime? @map("paid_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, year, month])
+  @@map("payrolls")
+}
+
+// 증명서
+model Certificate {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  type        CertificateType
+  purpose     String?
+  filePath    String?  @map("file_path")
+  status      CertificateStatus @default(PENDING)
+  issuedAt    DateTime? @map("issued_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("certificates")
+}
+
+enum CertificateType {
+  EMPLOYMENT
+  CAREER
+  INCOME
+}
+
+enum CertificateStatus {
+  PENDING
+  ISSUED
+  REJECTED
+}
