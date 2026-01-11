@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { getUnreadCount } from '@/lib/chatMessages';
 
 // Demo employees data
 const demoEmployees = [
@@ -21,6 +22,25 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState('');
   const [selectedDept, setSelectedDept] = useState('전체');
   const [showModal, setShowModal] = useState(false);
+  const [unreadCounts, setUnreadCounts] = useState<Record<number, number>>({});
+
+  // Fetch unread counts for all employees
+  const fetchUnreadCounts = useCallback(async () => {
+    const counts: Record<number, number> = {};
+    await Promise.all(
+      demoEmployees.map(async (emp) => {
+        const count = await getUnreadCount(emp.id);
+        counts[emp.id] = count;
+      })
+    );
+    setUnreadCounts(counts);
+  }, []);
+
+  useEffect(() => {
+    fetchUnreadCounts();
+    const interval = setInterval(fetchUnreadCounts, 3000);
+    return () => clearInterval(interval);
+  }, [fetchUnreadCounts]);
 
   const filteredEmployees = demoEmployees.filter((emp) => {
     const matchesSearch = emp.name.includes(search) || emp.email.includes(search);
@@ -120,15 +140,29 @@ export default function EmployeesPage() {
                 <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                      <div className="relative w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
                         <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                           {employee.name.charAt(0)}
                         </span>
+                        {unreadCounts[employee.id] > 0 && (
+                          <span className="absolute -top-1 -right-1 min-w-4 h-4 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1">
+                            {unreadCounts[employee.id] > 9 ? '9+' : unreadCounts[employee.id]}
+                          </span>
+                        )}
                       </div>
                       <span className="font-medium text-gray-900 dark:text-white">{employee.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{employee.email}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 dark:text-gray-400">{employee.email}</span>
+                      {unreadCounts[employee.id] > 0 && (
+                        <span className="px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-medium rounded">
+                          {unreadCounts[employee.id]}개 메시지
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{employee.department}</td>
                   <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{employee.position}</td>
                   <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{employee.hireDate}</td>

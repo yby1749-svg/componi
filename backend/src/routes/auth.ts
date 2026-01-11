@@ -46,7 +46,7 @@ router.post(
           email: user.email
         },
         process.env.JWT_SECRET || 'secret',
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as jwt.SignOptions['expiresIn'] }
       );
 
       const { password: _, ...userWithoutPassword } = user;

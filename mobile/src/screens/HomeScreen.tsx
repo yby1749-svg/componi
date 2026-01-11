@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { Card, CheckInButton, WorkHoursGauge } from '../components';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../constants/theme';
@@ -17,6 +17,7 @@ import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
 import { Attendance, WeeklyHours, Workplace } from '../types';
+import { getUnreadCount } from '../services/chatService';
 
 // 데모 데이터
 const DEMO_ATTENDANCE: Attendance = {
@@ -60,6 +61,7 @@ export const HomeScreen: React.FC = () => {
   const [weeklyHours, setWeeklyHours] = useState<WeeklyHours | null>(null);
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [currentTime, setCurrentTime] = useState('');
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
 
   // 데모 모드 초기화
   useEffect(() => {
@@ -103,6 +105,22 @@ export const HomeScreen: React.FC = () => {
 
     return () => clearInterval(timer);
   }, [fetchData]);
+
+  // Poll for unread chat messages
+  useFocusEffect(
+    useCallback(() => {
+      const fetchUnread = async () => {
+        // Using employeeId 1 for demo (김영희)
+        const count = await getUnreadCount(1);
+        setChatUnreadCount(count);
+      };
+
+      fetchUnread();
+      const interval = setInterval(fetchUnread, 3000);
+
+      return () => clearInterval(interval);
+    }, [])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -256,9 +274,9 @@ export const HomeScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>빠른 메뉴</Text>
           <View style={styles.quickMenu}>
             <QuickMenuItem icon="📅" label="연차 신청" onPress={() => navigation.navigate('Leave')} />
+            <QuickMenuItem icon="💬" label="인사팀 채팅" onPress={() => navigation.navigate('Chat')} badge={chatUnreadCount} />
+            <QuickMenuItem icon="📁" label="서류함" onPress={() => navigation.navigate('DocumentBox')} />
             <QuickMenuItem icon="💰" label="급여 명세서" />
-            <QuickMenuItem icon="📄" label="증명서 발급" onPress={() => navigation.navigate('Certificate')} />
-            <QuickMenuItem icon="📝" label="전자계약" onPress={() => navigation.navigate('Contract')} />
           </View>
         </View>
 
@@ -289,10 +307,15 @@ export const HomeScreen: React.FC = () => {
   );
 };
 
-const QuickMenuItem: React.FC<{ icon: string; label: string; onPress?: () => void }> = ({ icon, label, onPress }) => (
+const QuickMenuItem: React.FC<{ icon: string; label: string; onPress?: () => void; badge?: number }> = ({ icon, label, onPress, badge }) => (
   <TouchableOpacity style={styles.quickMenuItem} onPress={onPress}>
     <View style={styles.quickMenuIcon}>
       <Text style={styles.quickMenuEmoji}>{icon}</Text>
+      {badge !== undefined && badge > 0 && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+        </View>
+      )}
     </View>
     <Text style={styles.quickMenuLabel}>{label}</Text>
   </TouchableOpacity>
@@ -397,6 +420,23 @@ const styles = StyleSheet.create({
   quickMenuLabel: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#ef4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
   },
   cardTitle: {
     fontSize: fontSize.lg,

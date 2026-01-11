@@ -6,3 +6,5 @@ export { MoreScreen } from './MoreScreen';
 export { LeaveScreen } from './LeaveScreen';
 export { ContractScreen } from './ContractScreen';
 export { CertificateScreen } from './CertificateScreen';
+export { default as DocumentBoxScreen } from './DocumentBoxScreen';
+export { ChatScreen } from './ChatScreen';

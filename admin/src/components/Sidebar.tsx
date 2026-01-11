@@ -3,18 +3,34 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getUnreadCount as getChatUnreadCount } from '@/lib/chatMessages';
+
+// Demo employees for getting total unread chat counts
+const employeeIds = [1, 2, 3, 4, 5, 6, 7, 8];
+
+// Demo pending leave requests (would come from API in production)
+const getPendingLeaveCount = () => {
+  // 대기 중인 휴가 신청 수 (데모용)
+  const stored = localStorage.getItem('pendingLeaveCount');
+  return stored ? parseInt(stored, 10) : 2;
+};
+
+// Demo new attendance records (would come from API in production)
+const getNewAttendanceCount = () => {
+  // 새로운 출퇴근 기록 수 (데모용)
+  const stored = localStorage.getItem('newAttendanceCount');
+  return stored ? parseInt(stored, 10) : 3;
+};
 
 const menuItems = [
   { href: '/dashboard', label: '대시보드', icon: '📊' },
-  { href: '/employees', label: '직원 관리', icon: '👥' },
-  { href: '/attendance', label: '근태 관리', icon: '⏰' },
-  { href: '/leave', label: '휴가 승인', icon: '📅' },
+  { href: '/employees', label: '직원 관리', icon: '👥', badgeType: 'chat' },
+  { href: '/attendance', label: '근태 관리', icon: '⏰', badgeType: 'attendance' },
+  { href: '/leave', label: '휴가 승인', icon: '📅', badgeType: 'leave' },
   { href: '/payroll', label: '급여 관리', icon: '💰' },
-  { href: '/contracts', label: '계약 관리', icon: '📝' },
-  { href: '/certificates', label: '증명서 관리', icon: '📄' },
+  { href: '/documents', label: '필요서류 관리', icon: '📋' },
   { href: '/statistics', label: '통계 분석', icon: '📈' },
-  { href: '/notifications', label: '알림 센터', icon: '🔔' },
   { href: '/settings', label: '설정', icon: '⚙️' },
 ];
 
@@ -22,6 +38,53 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
+  const [leaveCount, setLeaveCount] = useState(0);
+  const [attendanceCount, setAttendanceCount] = useState(0);
+
+  // 휴가/출퇴근 알림 수 업데이트
+  useEffect(() => {
+    const updateCounts = () => {
+      setLeaveCount(getPendingLeaveCount());
+      setAttendanceCount(getNewAttendanceCount());
+    };
+
+    updateCounts();
+    const interval = setInterval(updateCounts, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 채팅 읽지 않은 메시지 수 (모든 직원)
+  useEffect(() => {
+    const fetchChatUnread = async () => {
+      let total = 0;
+      await Promise.all(
+        employeeIds.map(async (id) => {
+          const count = await getChatUnreadCount(id);
+          total += count;
+        })
+      );
+      setChatUnreadCount(total);
+    };
+
+    fetchChatUnread();
+    const interval = setInterval(fetchChatUnread, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 배지 수 가져오기
+  const getBadgeCount = (badgeType?: string): number => {
+    switch (badgeType) {
+      case 'chat':
+        return chatUnreadCount;
+      case 'leave':
+        return leaveCount;
+      case 'attendance':
+        return attendanceCount;
+      default:
+        return 0;
+    }
+  };
 
   return (
     <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 min-h-screen flex flex-col transition-all duration-300`}>
@@ -68,6 +131,8 @@ export function Sidebar() {
         <ul className="space-y-1">
           {menuItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            const badgeCount = getBadgeCount(item.badgeType);
+            const showBadge = badgeCount > 0;
             return (
               <li key={item.href}>
                 <Link
@@ -79,11 +144,25 @@ export function Sidebar() {
                   } ${isCollapsed ? 'justify-center' : ''}`}
                   title={isCollapsed ? item.label : undefined}
                 >
-                  <span className="text-xl flex-shrink-0">{item.icon}</span>
+                  <span className="text-xl flex-shrink-0 relative">
+                    {item.icon}
+                    {showBadge && isCollapsed && (
+                      <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                        {badgeCount > 9 ? '9+' : badgeCount}
+                      </span>
+                    )}
+                  </span>
                   {!isCollapsed && (
-                    <span className="font-medium text-sm">{item.label}</span>
+                    <>
+                      <span className="font-medium text-sm flex-1">{item.label}</span>
+                      {showBadge && (
+                        <span className="px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full animate-pulse">
+                          {badgeCount > 99 ? '99+' : badgeCount}
+                        </span>
+                      )}
+                    </>
                   )}
-                  {isActive && !isCollapsed && (
+                  {isActive && !isCollapsed && !showBadge && (
                     <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></div>
                   )}
                 </Link>

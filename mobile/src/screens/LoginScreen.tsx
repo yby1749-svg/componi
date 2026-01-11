@@ -18,7 +18,70 @@ import api from '../services/api';
 import { API_ENDPOINTS } from '../constants/api';
 
 // 데모 계정 정보
-const DEMO_USER = {
+const DEMO_USERS: Record<string, { user: typeof DEMO_USER_BASE; password: string }> = {
+  'demo@componi.app': {
+    user: {
+      id: 'demo-user-001',
+      email: 'demo@componi.app',
+      name: '김컴포니',
+      phone: '010-1234-5678',
+      employeeNo: 'EMP001',
+      role: 'EMPLOYEE' as const,
+      status: 'ACTIVE' as const,
+      annualLeave: 15,
+      usedLeave: 3,
+      hireDate: '2024-01-15',
+      company: {
+        id: 'company-001',
+        name: '컴포니 주식회사',
+        bizNumber: '123-45-67890',
+        address: '서울시 강남구 테헤란로 123',
+      },
+      department: {
+        id: 'dept-001',
+        name: '개발팀',
+      },
+      position: {
+        id: 'pos-001',
+        name: '선임',
+        level: 3,
+      },
+    },
+    password: '1234',
+  },
+  'younghee@componi.app': {
+    user: {
+      id: 'demo-user-001',
+      email: 'younghee@componi.app',
+      name: '김영희',
+      phone: '010-1234-5678',
+      employeeNo: 'EMP001',
+      role: 'EMPLOYEE' as const,
+      status: 'ACTIVE' as const,
+      annualLeave: 15,
+      usedLeave: 5,
+      hireDate: '2023-03-15',
+      company: {
+        id: 'company-001',
+        name: '컴포니 주식회사',
+        bizNumber: '123-45-67890',
+        address: '서울시 강남구 테헤란로 123',
+      },
+      department: {
+        id: 'dept-001',
+        name: '개발팀',
+      },
+      position: {
+        id: 'pos-001',
+        name: '선임',
+        level: 3,
+      },
+    },
+    password: '1234',
+  },
+};
+
+const DEMO_USER_BASE = {
   id: 'demo-user-001',
   email: 'demo@componi.app',
   name: '김컴포니',
@@ -61,8 +124,9 @@ export const LoginScreen: React.FC = () => {
     setLoading(true);
 
     // 데모 로그인 체크
-    if (email === 'demo@componi.app' && password === '1234') {
-      await setAuth(DEMO_USER, 'demo-token-12345');
+    const demoAccount = DEMO_USERS[email.toLowerCase()];
+    if (demoAccount && demoAccount.password === password) {
+      await setAuth(demoAccount.user, 'demo-token-12345');
       setLoading(false);
       return;
     }
@@ -138,8 +202,8 @@ export const LoginScreen: React.FC = () => {
 
             <View style={styles.demoContainer}>
               <Text style={styles.demoTitle}>테스트 계정</Text>
-              <Text style={styles.demoText}>ID: demo@componi.app</Text>
-              <Text style={styles.demoText}>PW: 1234</Text>
+              <Text style={styles.demoText}>김컴포니: demo@componi.app / 1234</Text>
+              <Text style={styles.demoText}>김영희: younghee@componi.app / 1234</Text>
             </View>
           </View>
         </View>
